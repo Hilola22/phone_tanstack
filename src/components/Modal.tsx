@@ -1,4 +1,5 @@
-import React, { useState, type FormEvent, useEffect } from "react";
+import React, { useEffect } from "react";
+import { Modal, Form, Input, InputNumber, Checkbox, Button } from "antd";
 import { usePhone, type IPhone } from "../api/hooks/usePhone";
 
 interface Props {
@@ -14,145 +15,114 @@ const ModalWindow: React.FC<Props> = ({
   isModalOpen,
   setIsModalOpen,
 }) => {
-  const [title, setTitle] = useState("");
-  const [price, setPrice] = useState("");
-  const [memories, setMemories] = useState("");
-  const [hasDelivery, setHasDelivery] = useState(false);
-
+  const [form] = Form.useForm();
   const { createPhone, updatePhone } = usePhone();
   const { mutate: createMutate, isPending: isCreating } = createPhone();
   const { mutate: updateMutate, isPending: isUpdating } = updatePhone();
 
   useEffect(() => {
     if (editingItem) {
-      setTitle(editingItem.title);
-      setPrice(String(editingItem.price));
-      setMemories(editingItem.memories.join(", "));
-      setHasDelivery(editingItem.hasDelivery);
+      form.setFieldsValue({
+        title: editingItem.title,
+        price: editingItem.price,
+        memories: editingItem.memories.join(", "),
+        hasDelivery: editingItem.hasDelivery,
+        imageUrl: editingItem.imageUrl || "",
+      });
     } else {
-      resetForm();
+      form.resetFields();
     }
-  }, [editingItem]);
+  }, [editingItem, form]);
 
-  const resetForm = () => {
-    setTitle("");
-    setPrice("");
-    setMemories("");
-    setHasDelivery(false);
-  };
-
-  const closeModal = () => {
-    resetForm();
-    setEditingItem(null);
-    setIsModalOpen(false);
-  };
-  
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = (values: any) => {
     const data = {
-      title,
-      price: Number(price),
-      memories: memories.split(",").map((m) => m.trim()),
-      hasDelivery,
+      ...values,
+      price: Number(values.price),
+      memories: values.memories.split(",").map((m: string) => m.trim()),
       id: editingItem?.id || "",
     };
 
     if (editingItem) {
       updateMutate(data, {
-        onSuccess: () => {
-          closeModal();
-        },
+        onSuccess: () => closeModal(),
       });
     } else {
       createMutate(data, {
-        onSuccess: () => {
-          closeModal();
-        },
+        onSuccess: () => closeModal(),
       });
     }
   };
 
+  const closeModal = () => {
+    form.resetFields();
+    setEditingItem(null);
+    setIsModalOpen(false);
+  };
+
   return (
-    <div className="bg-red-600 w-full ">
-      {isModalOpen && (
-        <div
-          onClick={() => setIsModalOpen(false)}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+    <Modal
+      title={editingItem ? "Edit Phone" : "Add Phone"}
+      open={isModalOpen}
+      onCancel={closeModal}
+      footer={null} 
+      destroyOnClose
+    >
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
+        <Form.Item
+          name="title"
+          label="Title"
+          rules={[{ required: true, message: "Please enter a title" }]}
         >
-          <form
-            onSubmit={handleSubmit}
-            className="bg-white w-96 p-6 rounded-lg shadow-lg"
-          >
-            <h2 className="text-lg font-semibold mb-4">
-              {editingItem ? "Edit Phone" : "Add Phone"}
-            </h2>
+          <Input placeholder="Title..." />
+        </Form.Item>
 
-            <input
-              type="text"
-              placeholder="Title..."
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full border border-gray-400 rounded-md px-3 py-2 mb-4"
-            />
-            <input
-              type="number"
-              placeholder="Price..."
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              className="w-full border border-gray-400 rounded-md px-3 py-2 mb-4"
-            />
-            <input
-              type="text"
-              placeholder="Memories (comma separated)..."
-              value={memories}
-              onChange={(e) => setMemories(e.target.value)}
-              className="w-full border border-gray-400 rounded-md px-3 py-2 mb-4"
-            />
+        <Form.Item
+          name="price"
+          label="Price"
+          rules={[{ required: true, message: "Please enter a price" }]}
+        >
+          <InputNumber
+            placeholder="Price..."
+            className="w-full"
+            min={0}
+            style={{ width: "100%" }}
+          />
+        </Form.Item>
 
-            <div className="flex items-center mb-4">
-              <input
-                id="hasDelivery"
-                type="checkbox"
-                checked={hasDelivery}
-                onChange={(e) => setHasDelivery(e.target.checked)}
-                className="mr-2 border border-gray-400 rounded-md"
-              />
-              <label htmlFor="hasDelivery">Has Delivery</label>
-            </div>
+        <Form.Item
+          name="imageUrl"
+          label="Image URL"
+          rules={[{ required: true, message: "Please enter image URL" }]}
+        >
+          <Input placeholder="Image URL..." />
+        </Form.Item>
 
-            <div className="flex justify-center gap-3">
-              {editingItem ? (
-                <>
-                  <button
-                    type="submit"
-                    disabled={isUpdating}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition disabled:opacity-50"
-                  >
-                    {isUpdating ? "Saving..." : "Save"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    disabled={isUpdating}
-                    className="px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={isCreating}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:opacity-50"
-                >
-                  {isCreating ? "Submitting..." : "Submit"}
-                </button>
-              )}
-            </div>
-          </form>
-        </div>
-      )}
-    </div>
+        <Form.Item
+          name="memories"
+          label="Memories"
+          rules={[{ required: true, message: "Please enter memories" }]}
+        >
+          <Input placeholder="Comma separated memories..." />
+        </Form.Item>
+
+        <Form.Item name="hasDelivery" valuePropName="checked">
+          <Checkbox>Has Delivery</Checkbox>
+        </Form.Item>
+
+        <Form.Item>
+          <div className="flex justify-end gap-2">
+            <Button onClick={closeModal}>Cancel</Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={isCreating || isUpdating}
+            >
+              {editingItem ? "Save" : "Submit"}
+            </Button>
+          </div>
+        </Form.Item>
+      </Form>
+    </Modal>
   );
 };
 

@@ -7,6 +7,7 @@ export interface IPhone {
   price: number;
   memories: string[];
   hasDelivery: boolean;
+  imageUrl: string;
 }
 
 export const usePhone = () => {
