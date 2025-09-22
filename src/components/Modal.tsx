@@ -41,6 +41,12 @@ const ModalWindow: React.FC<Props> = ({
     setHasDelivery(false);
   };
 
+  const closeModal = () => {
+    resetForm();
+    setEditingItem(null);
+    setIsModalOpen(false);
+  };
+  
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = {
@@ -66,17 +72,14 @@ const ModalWindow: React.FC<Props> = ({
     }
   };
 
-  const closeModal = () => {
-    resetForm();
-    setEditingItem(null);
-    setIsModalOpen(false);
-  };
-
   return (
     <div className="bg-red-600 w-full ">
       {isModalOpen && (
-        <div onClick={() => setIsModalOpen(false)} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <form 
+        <div
+          onClick={() => setIsModalOpen(false)}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+        >
+          <form
             onSubmit={handleSubmit}
             className="bg-white w-96 p-6 rounded-lg shadow-lg"
           >
