@@ -64,7 +64,7 @@ const ModalWindow: React.FC<Props> = ({
       title={editingItem ? "Edit Phone" : "Add Phone"}
       open={isModalOpen}
       onCancel={closeModal}
-      footer={null} 
+      footer={null}
       destroyOnClose
     >
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
@@ -102,7 +102,13 @@ const ModalWindow: React.FC<Props> = ({
           label="Memories"
           rules={[{ required: true, message: "Please enter memories" }]}
         >
-          <Input placeholder="Comma separated memories..." />
+          <Input
+            onChange={(e) => {
+              const onlyNums = e.target.value.replace(/[^0-9,]/g, "");
+              form.setFieldsValue({ memories: onlyNums });
+            }}
+            placeholder="Comma separated memories..."
+          />
         </Form.Item>
 
         <Form.Item name="hasDelivery" valuePropName="checked">
